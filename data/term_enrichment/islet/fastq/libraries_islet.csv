@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/islet/fastq/hpapdata/HPAP-175/Islet Studies/Islet molecular phenotyping studies/Single-cell Multiome (ATAC+RNA)/Upenn_Multiome/fastq_rna,HPAP-175,Gene Expression
+data/islet/fastq/hpapdata/HPAP-175/Islet Studies/Islet molecular phenotyping studies/Single-cell Multiome (ATAC+RNA)/Upenn_Multiome/fastq_atac,HPAP-175,Chromatin Accessibility

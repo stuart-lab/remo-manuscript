@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/heart/fastq/fastq_rna,heart,Gene Expression
+data/heart/fastq/fastq_atac,heart,Chromatin Accessibility

@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/lung/fastq/fastq_rna,lung,Gene Expression
+data/lung/fastq/fastq_atac,lung,Chromatin Accessibility

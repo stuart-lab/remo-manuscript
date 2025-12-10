@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/pancreas/fastq/fastq_rna,pancreas,Gene Expression
+data/pancreas/fastq/fastq_atac,pancreas,Chromatin Accessibility

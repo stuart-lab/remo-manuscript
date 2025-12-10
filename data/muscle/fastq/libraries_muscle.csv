@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/muscle/fastq/fastq_rna,muscle,Gene Expression
+data/muscle/fastq/fastq_atac,muscle,Chromatin Accessibility

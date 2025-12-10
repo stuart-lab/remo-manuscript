@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/liver/fastq/fastq_rna,liver,Gene Expression
+data/liver/fastq/fastq_atac,liver,Chromatin Accessibility

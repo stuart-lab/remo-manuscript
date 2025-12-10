@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/placenta/fastq/fastq_rna,placenta,Gene Expression
+data/placenta/fastq/fastq_atac,placenta,Chromatin Accessibility

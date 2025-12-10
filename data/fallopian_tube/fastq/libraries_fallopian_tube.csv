@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/fallopian_tube/fastq/fastq_rna,fallopian_tube,Gene Expression
+data/fallopian_tube/fastq/fastq_atac,fallopian_tube,Chromatin Accessibility

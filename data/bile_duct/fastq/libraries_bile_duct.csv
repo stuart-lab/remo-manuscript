@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/bile_duct/fastq/fastq_rna,bile_duct,Gene Expression
+data/bile_duct/fastq/fastq_atac,bile_duct,Chromatin Accessibility

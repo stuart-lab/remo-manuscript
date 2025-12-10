@@ -1,0 +1,3 @@
+fastqs,sample,library_type
+data/left_colon/fastq/fastq_rna,left_colon,Gene Expression
+data/left_colon/fastq/fastq_atac,left_colon,Chromatin Accessibility
