@@ -29,6 +29,8 @@ brain,OPC,oligodendrocyte precursor cell,CL:0002453
 brain,Pvalb,pvalb GABAergic interneuron,CL:4023018
 brain,Sst,sst GABAergic interneuron,CL:4023017
 brain,Vip,VIP GABAergic interneuron,CL:4023016
+brain,VLMC,fibroblast,CL:0000057
+brain,VLMC,pericyte,CL:1001602
 islet,alpha,pancreatic A cell,CL:0000171
 islet,alpha,pancreatic endocrine cell,CL:0008024
 islet,beta,type B pancreatic cell,CL:0000169
@@ -41,3 +43,4 @@ islet,endothelial,endothelial cell,CL:0000115
 islet,activated_stellate,pancreatic stellate cell,CL:0002410
 islet,quiescent_stellate,pancreatic stellate cell,CL:0002410
 islet,immune,microglial cell,CL:0000129
+islet,immune,macrophage,CL:0000235

@@ -33,11 +33,10 @@ rule install_dependencies:
         """
 
 rule get_annotations:
-    output: "data/annotations.rds"
-    shell:
-        """
-        Rscript code/build_annotations.R
-        """
+    output: 
+        "data/annotations.rds"
+    script:
+        "code/build_annotations.R"
 
 rule get_remo:
     output: "data/REMOv1_GRCh38.bed.gz"
