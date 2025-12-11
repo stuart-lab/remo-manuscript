@@ -41,7 +41,7 @@ rule get_annotations:
 
 rule get_remo:
     output: "data/REMOv1_GRCh38.bed.gz"
-    shell: "wget -O {output} https://github.com/stuart-lab/REMO.v1.GRCh38/blob/main/inst/extdata/REMOv1_GRCh38.bed.gz"
+    shell: "wget -O {output} https://github.com/stuart-lab/REMO.v1.GRCh38/raw/refs/heads/main/inst/extdata/REMOv1_GRCh38.bed.gz"
 
 rule download:
     input: "data/{tissue}/download.sh"
