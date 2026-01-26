@@ -16,3 +16,5 @@ fgsea
 readr
 Azimuth
 scDblFinder
+ontoProc
+igraph

@@ -17,7 +17,8 @@ rule all:
         "plots/whole_body_runtime.png",
         "plots/wholebody_dimplot.png",
         "plots/term_enrichment_umap.png",
-        "plots/term_enrichment_metrics.pdf"
+        "plots/term_enrichment_metrics.pdf",
+        "data/term_enrichment/random_enrichment_shortestdist.csv"
 
 rule install_dependencies:
     input: "code/packages.txt"
@@ -683,3 +684,28 @@ rule term_enrichment_metrics:
         tissue="data/term_enrichment/fgsea_tissue.csv"
     script:
         "code/term_enrichment/term_enrichment_metrics.R"
+
+rule download_cell_ontology:
+    output: "data/term_enrichment/cl.obo"
+    shell:
+        """
+        cd data/term_enrichment/
+        wget https://purl.obolibrary.org/obo/cl.obo
+        """
+
+rule term_enrichment_ontology_metrics:
+    input:
+        brain_remo="data/term_enrichment/brain/brain_remo.rds",
+        brain_predictions="data/term_enrichment/brain/brain_predictions.rds",
+        pbmc_remo="data/term_enrichment/pbmc/pbmc_remo.rds",
+        pbmc_predictions="data/term_enrichment/pbmc/pbmc_predictions.rds",
+        islet_remo="data/term_enrichment/islet/islet_remo.rds",
+        islet_predictions="data/term_enrichment/islet/islet_predictions.rds",
+        label_match="data/term_enrichment/label_match.csv",
+        ontology_data="data/term_enrichment/cl.obo"
+    output:
+        dist_plot="plots/term_enrichment_shortestdist.png",
+        enrichment_table="data/term_enrichment/enrichment_shortestdist.csv",
+        random_enrichment_table="data/term_enrichment/random_enrichment_shortestdist.csv"
+    script:
+        "code/term_enrichment/cell_ontology_metrics.R"
