@@ -37,6 +37,12 @@ g_filtered <- induced_subgraph(g, cl_nodes)
 idx <- names(cl$name)[which(names(cl$name) %in% names(REMO.v1.GRCh38.CL_ID))]
 remo_cl <- cl$name[idx]
 
+# blood only remo cl terms
+blood_remo_cl <- remo_cl[remo_cl %in% REMO.v1.GRCh38.tissues$Blood]
+# pancreas only remo cl terms
+pancreas_remo_cl <- remo_cl[remo_cl %in% REMO.v1.GRCh38.tissues$Pancreas]
+
+
 # get a dataframe of wrong terms
 wrong_terms <- function(obj, predictions, lookup, label_match) {
     # get top1 enriched terms
@@ -153,18 +159,18 @@ brain_wt_organ <- wrong_terms(obj = brain_obj,
                               predictions = brain_predictions_organ, 
                               lookup = setNames(names(remo_cl), remo_cl), 
                               label_match = label_match)
-# note: brain got no wrong enrichment
+# note: brain dataset has no wrong enrichment
 
 # randomize assignment
 pbmc_wt_random_wholebody <- pbmc_wt_wholebody
 pbmc_wt_random_wholebody$enriched_terms_CL.ID <- sample(names(remo_cl), nrow(pbmc_wt_random_wholebody), replace = TRUE)
 pbmc_wt_random_organ <- pbmc_wt_organ
-pbmc_wt_random_organ$enriched_terms_CL.ID <- sample(names(remo_cl), nrow(pbmc_wt_random_organ), replace = TRUE)
+pbmc_wt_random_organ$enriched_terms_CL.ID <- sample(names(blood_remo_cl), nrow(pbmc_wt_random_organ), replace = TRUE)
 
 islet_wt_random_wholebody <- islet_wt_wholebody
 islet_wt_random_wholebody$enriched_terms_CL.ID <- sample(names(remo_cl), nrow(islet_wt_random_wholebody), replace = TRUE)
 islet_wt_random_organ <- islet_wt_organ
-islet_wt_random_organ$enriched_terms_CL.ID <- sample(names(remo_cl), nrow(islet_wt_random_organ), replace = TRUE)
+islet_wt_random_organ$enriched_terms_CL.ID <- sample(names(pancreas_remo_cl), nrow(islet_wt_random_organ), replace = TRUE)
 
 # calculate LCAD
 pbmc_wt_wholebody <- calculate_shortest_dist(pbmc_wt_wholebody, g_filtered, cl)
