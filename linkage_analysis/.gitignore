@@ -1,0 +1,6 @@
+/data/*
+/log/
+.DS_Store
+**/.DS_Store
+/scripts/01_link_peaks_bile_duct.sh
+/resources/*
