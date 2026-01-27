@@ -7,16 +7,14 @@ renv::restore()
 ```
 For restoring renv refer to https://rstudio.github.io/renv/articles/renv.html#collaboration
 
-### Download resources.zip 
+### Prepare resources folder
 See below for expected structure:
 ```bash
 ./linkage_analysis/resources
 ├── example
-│   └── pgls_metadata_all_chr.tsv
-├── gencode.v32.basic.annotation.gtf.gz
-├── multiome
-├── REMOv1_GRCh38.bed.gz
-└── REMOv1_hg38.bed
+│   └── pgls_metadata_all_chr.tsv (from supplementary data)
+├── gencode.v32.basic.annotation.gtf.gz (from https://www.gencodegenes.org/human/release_32.html)
+└── multiome (your Seurat multiome datasets[.rds])
 ```
 
 # Script setup

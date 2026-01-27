@@ -6,14 +6,13 @@ suppressPackageStartupMessages({
 	library(rtracklayer)
 	library(GenomicRanges)
 	library(Signac)
+	library(REMO.v1.GRCh38)
 })
 
 parser <- ArgumentParser()
 
 parser$add_argument("--renv_dir", required = TRUE,
 	help = "Path to renv project root")
-parser$add_argument("--remo_bed", required = TRUE,
-	help = "REMO BED(.gz) path")
 parser$add_argument("--sig_pgl_fpath", required = TRUE,
 	help = "Significant PGL metadata TSV path (must include column 'peak')")
 parser$add_argument("--output_dir", required = TRUE,
@@ -27,7 +26,6 @@ args <- parser$parse_args()
 
 renv::load(args$renv_dir)
 
-remo_bed <- args$remo_bed
 sig_pgl_fpath <- args$sig_pgl_fpath
 output_dir <- args$output_dir
 output_fpath <- file.path(output_dir, args$output_name)
@@ -45,9 +43,9 @@ start(remo) <- start(remo) - 1
 
 sig_links <- fread(sig_pgl_fpath)
 
-gr_dt <- as.data.table(remo)
-gr_dt[, peak := GRangesToString(remo)]
-gr_dt[, remo_name := remo$name]
+gr_dt <- as.data.table(REMO.v1.GRCh38)
+gr_dt[, peak := GRangesToString(REMO.v1.GRCh38)]
+gr_dt[, remo_name := REMO.v1.GRCh38$REMO]
 
 linked_peaks <- unique(sig_links$peak)
 gr_dt[, linked := peak %in% linked_peaks]

@@ -932,6 +932,35 @@
       "Maintainer": "CRAN Team <CRAN@r-project.org>",
       "Repository": "CRAN"
     },
+    "REMO.v1.GRCh38": {
+      "Package": "REMO.v1.GRCh38",
+      "Version": "1.0.0",
+      "Source": "GitHub",
+      "Title": "REMO v1 modules for GRCh38 genome",
+      "Authors@R": "c( person(given = 'Tim', family = 'Stuart', email = 'stuartt@a-star.edu.sg', role = c('aut', 'cre'), comment = c(ORCID = '0000-0002-3044-0897')), person(given = 'Chrysania', family = 'Lim', email = 'Chrysania_Lim@a-star.edu.sg', role = c('aut')) )",
+      "Description": "REMO version 1 module coordinates for human genome GRCh38 assembly",
+      "License": "Artistic-2.0",
+      "Encoding": "UTF-8",
+      "LazyData": "true",
+      "LazyDataCompression": "xz",
+      "Depends": [
+        "R (>= 4.1.0)"
+      ],
+      "Collate": "'data.R'",
+      "RoxygenNote": "7.3.3",
+      "Imports": [
+        "GenomicRanges"
+      ],
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteRepo": "REMO.v1.GRCh38",
+      "RemoteUsername": "stuart-lab",
+      "RemoteRef": "HEAD",
+      "RemoteSha": "fa07c02951ddb22bdf3d893eea06ccbdd92b2dcf",
+      "NeedsCompilation": "no",
+      "Author": "Tim Stuart [aut, cre] (<https://orcid.org/0000-0002-3044-0897>), Chrysania Lim [aut]",
+      "Maintainer": "Tim Stuart <stuartt@a-star.edu.sg>"
+    },
     "ROCR": {
       "Package": "ROCR",
       "Version": "1.0-11",

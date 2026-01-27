@@ -18,8 +18,6 @@ PROJECT_ROOT="/Projects/linkage_analysis" # "path/to/renv_proj"
 SIG_PGL_FPATH="${PROJECT_ROOT}/data/filtered_links/sig_pvalue/pgl_metadata/pgls_metadata_all_chr.tsv"  
 # ------------------------------------------------------------------------------
 
-REMO_BED="${PROJECT_ROOT}/resources/REMOv1_GRCh38.bed.gz"
-
 SCRIPT_COND_PROBS="${PROJECT_ROOT}/scripts/03_get_conditional_probs.R"
 SCRIPT_GLM_COEFFS="${PROJECT_ROOT}/scripts/03a_get_glm_coeffs.R"
 SCRIPT_GLM_SUMMARY="${PROJECT_ROOT}/scripts/03b_build_glm_summary.R"
@@ -45,7 +43,6 @@ echo "Running 03_get_conditional_probs.R"
 cmd1=(
 	Rscript "${SCRIPT_COND_PROBS}"
 	--renv_dir "${PROJECT_ROOT}"
-	--remo_bed "${REMO_BED}"
 	--sig_pgl_fpath "${SIG_PGL_FPATH}"
 	--output_dir "${OUTPUT_DIR}"
 )
@@ -57,7 +54,6 @@ echo "Running 03a_get_glm_coeffs.R"
 cmd2=(
 	Rscript "${SCRIPT_GLM_COEFFS}"
 	--renv_dir "${PROJECT_ROOT}"
-	--remo_bed "${REMO_BED}"
 	--sig_pgl_fpath "${SIG_PGL_FPATH}"
 	--output_dir "${OUTPUT_DIR}"
 )
@@ -69,7 +65,7 @@ echo "Running 03b_build_glm_summary.R"
 cmd3=(
 	Rscript "${SCRIPT_GLM_SUMMARY}"
 	--renv_dir "${PROJECT_ROOT}"
-	"${GLM_DIR}"
+	--glm_dir "${GLM_DIR}"
 	--outcome "${OUTCOME}"
 	--term "${TERM}"
 )

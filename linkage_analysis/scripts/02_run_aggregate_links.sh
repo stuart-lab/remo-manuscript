@@ -19,7 +19,6 @@ FILTER_CONDS_CSV="${PROJECT_ROOT}/scripts/config/link_filtering_conds.csv" # spe
 
 R_SCRIPT="${PROJECT_ROOT}/scripts/02_aggregate_links.R"
 
-REMO_BED="${PROJECT_ROOT}/resources/REMOv1_GRCh38.bed.gz"
 GENCODE_GTF="${PROJECT_ROOT}/resources/gencode.v32.basic.annotation.gtf.gz"
 
 COMBINED_OUTDIR="${PROJECT_ROOT}/data/combined_metadata"
@@ -43,7 +42,6 @@ cmd=(
   --combined_outdir "${COMBINED_OUTDIR}"
   --filtered_parent_dir "${FILTERED_PARENT_DIR}"
   --gencode_gtf "${GENCODE_GTF}"
-  --remo_bed "${REMO_BED}"
   --distance_to_tss "${DISTANCE_TO_TSS}"
 )
 

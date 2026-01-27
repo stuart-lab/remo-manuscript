@@ -16,8 +16,6 @@ parser <- ArgumentParser()
 
 parser$add_argument("--renv_dir", required = TRUE,
 	help = "Path to renv project root")
-parser$add_argument("--remo_bed", required = TRUE,
-	help = "REMO BED path")
 parser$add_argument("--sig_pgl_fpath", required = TRUE,
 	help = "Significant PGL metadata TSV path (must include columns 'peak' and 'gene')")
 parser$add_argument("--output_dir", required = TRUE,
@@ -37,7 +35,6 @@ args <- parser$parse_args()
 
 renv::load(args$renv_dir)
 
-remo_bed <- args$remo_bed
 sig_pgl_fpath <- args$sig_pgl_fpath
 output_dir <- args$output_dir
 max_d <- as.integer(args$max_d)
@@ -326,12 +323,9 @@ summarise_glm <- function(fit, model_name, outcome) {
 skip_chrs <- parse_chr_list(args$skip_chrs)
 only_chrs <- parse_chr_list(args$only_chrs)
 
-remo <- import(remo_bed, format = "BED")
-start(remo) <- start(remo) - 1
-
 sig_links <- fread(sig_pgl_fpath)
 
-rel_levels <- seqlevels(remo)
+rel_levels <- seqlevels(REMO.v1.GRCh38)
 if (length(only_chrs) > 0L) {
 	rel_levels <- intersect(rel_levels, only_chrs)
 } else if (length(skip_chrs) > 0L) {
@@ -345,8 +339,8 @@ vcat(sprintf("Chromosomes to run: %s", paste(rel_levels, collapse = ",")))
 # Subset to linked peaks
 # ----------
 linked_peak_strs <- unique(sig_links$peak)
-gr_peaks_strs <- GRangesToString(remo)
-gr_sub <- remo[gr_peaks_strs %in% linked_peak_strs]
+gr_peaks_strs <- GRangesToString(REMO.v1.GRCh38)
+gr_sub <- REMO.v1.GRCh38[gr_peaks_strs %in% linked_peak_strs]
 
 # ----------
 # Per-chromosome processing

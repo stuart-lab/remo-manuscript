@@ -18,7 +18,6 @@ SEURAT_RDS="${PROJECT_ROOT}/resources/multiome/jejunum_multiome_linkpeaks.rds" #
 
 R_SCRIPT="${PROJECT_ROOT}/scripts/01_link_peaks.R"
 
-REMO_BED="${PROJECT_ROOT}/resources/REMOv1_hg38.bed"
 GENCODE_GTF="${PROJECT_ROOT}/resources/gencode.v32.basic.annotation.gtf.gz"
 
 WORKERS="${SLURM_CPUS_PER_TASK:-1}"
@@ -34,7 +33,6 @@ test -f renv/activate.R || { echo "Missing renv/activate.R in $(pwd)"; exit 2; }
 cmd=(
   Rscript "${R_SCRIPT}"
   --seurat_rds "${SEURAT_RDS}"
-  --remo_bed "${REMO_BED}"
   --gencode_gtf "${GENCODE_GTF}"
   --output_dir "${OUTPUT_DIR}"
   --workers "${WORKERS}"

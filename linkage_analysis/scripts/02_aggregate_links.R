@@ -23,8 +23,6 @@ parser$add_argument("--filtered_parent_dir", required = TRUE,
   help = "Parent dir for per-condition outputs")
 parser$add_argument("--gencode_gtf", required = TRUE,
   help = "GENCODE GTF")
-parser$add_argument("--remo_bed", required = TRUE,
-  help = "REMO BED")
 parser$add_argument("--distance_to_tss", default = 500,
   help = "Distance used in Signac:::DistanceToTSS (proximal genes)")
 parser$add_argument("--overwrite", action = "store_true",
@@ -37,7 +35,6 @@ filter_conds_csv <- args$filter_conds_csv
 combined_outdir <- args$combined_outdir
 filtered_parent_dir <- args$filtered_parent_dir
 gencode_gtf <- args$gencode_gtf
-remo_bed <- args$remo_bed
 distance_to_tss <- as.numeric(args$distance_to_tss)
 overwrite <- isTRUE(args$overwrite)
 
@@ -99,12 +96,10 @@ conds <- config$condition
 summary_fpath <- file.path(combined_outdir, "summary.txt")
 if (overwrite && file.exists(summary_fpath)) file.remove(summary_fpath)
 
-remo <- import(remo_bed, format = "BED")
-start(remo) <- start(remo) - 1
-rel_levels <- levels(seqnames(remo))
+rel_levels <- seqlevels(REMO.v1.GRCh38)
 
-peak_strs <- GRangesToString(remo)
-peak_grps <- remo$name
+peak_strs <- GRangesToString(REMO.v1.GRCh38)
+peak_grps <- REMO.v1.GRCh38$REMO
 names(peak_grps) <- peak_strs
 
 gencode <- import(gencode_gtf)
@@ -113,7 +108,7 @@ gencode_transcripts <- gencode[gencode$type == "transcript" & seqnames(gencode) 
 dt_gc <- as.data.table(gencode_transcripts)[, .(gene_name, seqnames = as.character(seqnames))]
 multi_chr_genes <- dt_gc[, .(n_chr = uniqueN(seqnames)), by = gene_name][n_chr > 1]
 
-pdm <- Signac:::DistanceToTSS(peaks = remo, genes = gencode_transcripts, distance = distance_to_tss)
+pdm <- Signac:::DistanceToTSS(peaks = REMO.v1.GRCh38, genes = gencode_transcripts, distance = distance_to_tss)
 pdm <- CollapseDuplicateColumns(pdm)
 
 T <- as(pdm, "TsparseMatrix")
@@ -148,7 +143,7 @@ for (chr in rel_levels) {
   chr_links <- rbindlist(links_list, use.names = TRUE, fill = TRUE)[order(peak, gene)]
   chr_links_list[[chr]] <- chr_links
 
-  chr_all_peaks <- remo[seqnames(remo) == chr]
+  chr_all_peaks <- REMO.v1.GRCh38[seqnames(REMO.v1.GRCh38) == chr]
   cat(sprintf("%s: %d linked peaks out of %d peaks\n",
               chr, length(unique(chr_links$peak)), length(chr_all_peaks)),
       file = summary_fpath, append = TRUE)
@@ -191,8 +186,8 @@ for (cond in conds) {
     }
     all_pgl_metadata_list[[chr]] <- sig_links
 
-    chr_peak_strs <- GRangesToString(remo[seqnames(remo) == chr])
-    chr_remos <- remo[seqnames(remo) == chr]$name
+    chr_peak_strs <- GRangesToString(REMO.v1.GRCh38[seqnames(REMO.v1.GRCh38) == chr])
+    chr_remos <- REMO.v1.GRCh38[seqnames(REMO.v1.GRCh38) == chr]$name
     peaks_dt <- data.table(peak = chr_peak_strs, remo_name = chr_remos)
 
     chr_genesPerPeak <- pcre_by_peak[peaks_dt, on = "peak"]

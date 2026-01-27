@@ -30,6 +30,7 @@ suppressPackageStartupMessages({
   library(future)
   library(future.apply)
   library(pbapply)
+  library(REMO.v1.GRCh38)
 })
 
 # -------------------------- #
@@ -213,10 +214,6 @@ CollapseDuplicateColumns <- function(mat) {
 #  Helper: LinkPeaksCustom
 # -------------------------- #
 
-# This is your original LinkPeaks function with:
-#   - name changed to LinkPeaksCustom
-#   - CollapseDuplicateColumns used to handle duplicate DistanceToTSS columns
-#   - fully parameterised for assay names/layers.
 LinkPeaksCustom <- function(
   object,
   peak.assay,
@@ -474,11 +471,11 @@ message("Loading Seurat object...")
 data <- readRDS(seurat_rds)
 
 message("Loading REMO peaks (BED)...")
-remo_peaks <- rtracklayer::import(remo_bed, format = "BED")
+remo_peaks <- import(remo_bed, format = "BED")
 rel_levels <- levels(seqnames(remo_peaks))
 
 message("Loading GENCODE annotations (GTF)...")
-gencode <- rtracklayer::import(gencode_gtf)
+gencode <- import(gencode_gtf)
 gencode_transcripts <- gencode[
   gencode$type == "transcript" &
     seqnames(gencode) %in% rel_levels

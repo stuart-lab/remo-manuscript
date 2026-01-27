@@ -9,7 +9,7 @@ parser <- ArgumentParser()
 
 parser$add_argument("--renv_dir", required = TRUE,
 	help = "Path to renv project root")
-parser$add_argument("glm_dir",
+parser$add_argument("--glm_dir", required = TRUE,
 	help = "Directory containing per-chromosome GLM result TSV files")
 parser$add_argument("--outcome", required = TRUE,
 	help = "Outcome column value to filter on (e.g. same_remo)")
