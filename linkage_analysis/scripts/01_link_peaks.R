@@ -1,24 +1,5 @@
 #!/usr/bin/env Rscript
 
-# 01_link_peaks.R
-#
-# Per-chromosome Signac peak–gene linking using a custom LinkPeaks() wrapper.
-#
-# This script:
-#   1) Loads a preprocessed Seurat object
-#   2) Loads REMO peak definitions (BED)
-#   3) Loads GENCODE transcripts (GTF)
-#   4) Runs a modified LinkPeaks per chromosome
-#   5) Writes per-chromosome TSV files with columns: peak, gene, score, pvalue
-
-
-## ---- renv bootstrap (must run before library()) ----
-if (file.exists("renv/activate.R")) {
-  source("renv/activate.R")
-} else {
-  stop("renv/activate.R not found. Run this script from the project root.", call. = FALSE)
-}
-
 suppressPackageStartupMessages({
   library(argparse)
   library(Signac)
@@ -45,10 +26,7 @@ parser$add_argument(
   "--seurat_rds", required = TRUE,
   help = "Path to Seurat object preprocessed for Signac peak-gene linking (.rds)"
 )
-parser$add_argument(
-  "--remo_bed", required = TRUE,
-  help = "Path to REMO peak BED file"
-)
+
 parser$add_argument(
   "--gencode_gtf", required = TRUE,
   help = "Path to GENCODE GTF file (gz or plain)"
@@ -108,7 +86,6 @@ parser$add_argument(
 args <- parser$parse_args()
 
 seurat_rds       <- args$seurat_rds
-remo_bed         <- args$remo_bed
 gencode_gtf      <- args$gencode_gtf
 output_dir       <- args$output_dir
 peak_assay       <- args$peak_assay
@@ -119,7 +96,6 @@ expression_layer <- args$expression_layer
 dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
 
 message("Input Seurat RDS:    ", seurat_rds)
-message("REMO BED:            ", remo_bed)
 message("GENCODE GTF:         ", gencode_gtf)
 message("Output directory:    ", output_dir)
 message("Peak assay:          ", peak_assay,       " | layer: ", peak_layer)
@@ -470,15 +446,19 @@ LinkPeaksCustom <- function(
 message("Loading Seurat object...")
 data <- readRDS(seurat_rds)
 
-message("Loading REMO peaks (BED)...")
-remo_peaks <- import(remo_bed, format = "BED")
-rel_levels <- levels(seqnames(remo_peaks))
+rel_levels <- seqlevels(REMO.v1.GRCh38)
 
 message("Loading GENCODE annotations (GTF)...")
 gencode <- import(gencode_gtf)
 gencode_transcripts <- gencode[
   gencode$type == "transcript" &
     seqnames(gencode) %in% rel_levels
+]
+# remove genes with the same name across multiple chr
+dt_gc <- as.data.table(gencode_transcripts)[, .(gene_name, seqnames = as.character(seqnames))]
+multi_chr_genes <- dt_gc[, uniqueN(chr) > 1, gene_name]
+gencode_transcripts <- gencode_transcripts[
+  !(gencode_transcripts$gene_name %in% multi_chr_genes)
 ]
 
 message("Chromosomes to process: ", paste(rel_levels, collapse = ", "))

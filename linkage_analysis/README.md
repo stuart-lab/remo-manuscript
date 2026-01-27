@@ -12,7 +12,7 @@ See below for expected structure:
 ```bash
 ./linkage_analysis/resources
 ├── example
-│   └── pgls_metadata_all_chr.tsv (from supplementary data)
+│   └── pgls_metadata_all_chr.tsv.gz (from supplementary data)
 ├── gencode.v32.basic.annotation.gtf.gz (from https://www.gencodegenes.org/human/release_32.html)
 └── multiome (your Seurat multiome datasets[.rds])
 ```

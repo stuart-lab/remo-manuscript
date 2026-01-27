@@ -7,6 +7,7 @@ suppressPackageStartupMessages({
 	library(rtracklayer)
 	library(GenomicRanges)
 	library(Signac)
+	library(REMO.v1.GRCh38)
 })
 
 # ----------

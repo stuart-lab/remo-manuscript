@@ -6,6 +6,7 @@ suppressPackageStartupMessages({
   library(Matrix)
   library(data.table)
   library(rtracklayer)
+  library(REMO.v1.GRCh38)
 })
 
 # -----------------------------
@@ -133,7 +134,19 @@ for (chr in rel_levels) {
     link_fpath <- file.path(link_dir, paste0(chr, ".tsv"))
     links <- fread(link_fpath)
 
+    # Ensure that genes with the same name across multiple chr
+    # are filtered out of downstream steps
     links <- links[!(gene %in% multi_chr_genes$gene_name), ]
+    n_before <- nrow(links)
+    is_multi <- links$gene %in% multi_chr_genes$gene_name
+    links <- links[!is_multi]
+
+    cat(sprintf(
+      "Removed %d multi_chr_genes; %d/%d links removed\n",
+      length(unique(links$gene[is_multi])),
+      sum(is_multi),
+      n_before
+    ))
     links[, remo_name := peak_grps[peak]]
     links[, dataset := basename(link_dir)]
 
