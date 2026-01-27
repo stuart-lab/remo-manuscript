@@ -16,7 +16,7 @@ suppressPackageStartupMessages({
 parser <- ArgumentParser()
 
 parser$add_argument("--renv_dir", required = TRUE,
-	help = "Path to renv project root")
+	help = "Path to project (renv) root")
 parser$add_argument("--sig_pgl_fpath", required = TRUE,
 	help = "Significant PGL metadata TSV path (must include columns 'peak' and 'gene')")
 parser$add_argument("--output_dir", required = TRUE,
@@ -29,8 +29,6 @@ parser$add_argument("--only_chrs", default = "",
 	help = "Comma-separated list of chromosomes to run (overrides skip_chrs if set)")
 parser$add_argument("--overwrite", action = "store_true",
 	help = "Overwrite per-chr outputs if they exist")
-parser$add_argument("--verbose", action = "store_true",
-	help = "Enable verbose logging (prints intermediate tables and diagnostics)")
 
 args <- parser$parse_args()
 
@@ -40,7 +38,6 @@ sig_pgl_fpath <- args$sig_pgl_fpath
 output_dir <- args$output_dir
 max_d <- as.integer(args$max_d)
 overwrite <- isTRUE(args$overwrite)
-verbose <- isTRUE(args$verbose)
 
 dir.create(output_dir, recursive = TRUE, showWarnings = FALSE)
 
@@ -55,17 +52,6 @@ dir.create(glmResults_dir, recursive = TRUE, showWarnings = FALSE)
 # ----------
 # Helpers
 # ----------
-vcat <- function(...) {
-	if (isTRUE(verbose)) message(...)
-}
-
-vprint_head <- function(x, n = 6L, label = NULL) {
-	if (!isTRUE(verbose)) return(invisible(NULL))
-	if (!is.null(label)) message(label)
-	print(utils::head(x, n = n))
-	invisible(NULL)
-}
-
 parse_chr_list <- function(x) {
 	x <- trimws(x)
 	if (nchar(x) == 0L) return(character(0))
@@ -73,15 +59,11 @@ parse_chr_list <- function(x) {
 }
 
 get_linkedPeaks_dt <- function(gr, pgl_dt) {
+
 	# ---- Map peaks to linked genes ----
 	gr_peak_names <- GRangesToString(gr)
 
 	pgl_small <- pgl_dt[peak %chin% unique(gr_peak_names)]
-	vprint_head(pgl_small, label = "Head(pgl_small):")
-
-	if (isTRUE(verbose)) {
-		print(all.equal(pgl_dt, pgl_small))
-	}
 
 	genes_per_peak <- pgl_small[
 		,
@@ -89,26 +71,49 @@ get_linkedPeaks_dt <- function(gr, pgl_dt) {
 		by = peak
 	]
 
-	vprint_head(genes_per_peak, label = "Head(genes_per_peak):")
-
 	setnames(genes_per_peak, "peak", "peak_name")
 	setkey(genes_per_peak, peak_name)
 
 	# ---- Build peak metadata dt ----
-	if (isTRUE(verbose)) {
-		message("Head(gr):")
-		print(utils::head(gr))
+	mcols_names <- names(mcols(gr))
+	if ("REMO" %in% mcols_names) {
+		names_vec <- as.character(gr$REMO)
+
+	} else if (length(mcols_names) > 0L) {
+		id_col <- mcols_names[1L]
+		names_vec <- as.character(mcols(gr)[[id_col]])
+
+		cat(sprintf(
+			"[WARN] GRanges has no 'REMO' metadata column; using first metadata column '%s' for 'names'.\n",
+			id_col
+		))
+
+		prefix <- "REMOv1.GRCh38-"
+		ok <- startsWith(names_vec, prefix)
+		ok[is.na(ok)] <- FALSE
+
+		if (!all(ok)) {
+			bad_idx <- which(!ok)
+			ex_bad <- head(unique(names_vec[bad_idx]), 5)
+			cat(sprintf(
+				"[WARN] %d/%d values in '%s' do not start with '%s'. Examples: %s\n",
+				length(bad_idx), length(names_vec),
+				id_col, prefix,
+				paste(ex_bad, collapse = " | ")
+			))
+		}
+
+	} else {
+		stop("GRanges has no metadata columns (mcols is empty); cannot derive REMO identifier.")
 	}
 
 	dt <- data.table(
 		seqname   = as.character(seqnames(gr)),
 		start     = start(gr),
 		end       = end(gr),
-		names     = as.character(gr$name),
+		names     = names_vec,
 		peak_name = gr_peak_names
 	)
-
-	vprint_head(dt, label = "Head(dt peak metadata):")
 
 	dt[, linkedGenes_list := vector("list", .N)]
 	setkey(dt, peak_name)
@@ -125,6 +130,7 @@ get_linkedPeaks_dt <- function(gr, pgl_dt) {
 }
 
 get_pairedPeaks_dt <- function(dt, max_d = 100L, with_stats = TRUE) {
+
 	n <- nrow(dt)
 
 	fmt_count <- function(x) {
@@ -137,6 +143,7 @@ get_pairedPeaks_dt <- function(dt, max_d = 100L, with_stats = TRUE) {
 
 	# ---- Handle n <= 1 ----
 	if (n <= 1L) {
+
 		pair_dt <- data.table(
 			peak_names = character(),
 			log_d      = numeric(),
@@ -183,6 +190,7 @@ get_pairedPeaks_dt <- function(dt, max_d = 100L, with_stats = TRUE) {
 	}
 
 	for (i in seq_len(n - 1L)) {
+
 		chr_i <- dt$seqname[i]
 		end_i <- dt$end[i]
 		j <- i + 1L
@@ -204,17 +212,25 @@ get_pairedPeaks_dt <- function(dt, max_d = 100L, with_stats = TRUE) {
 
 	# ---- Construct output dt ----
 	if (k == 0L) {
+
 		pair_dt <- data.table(
 			peak_names = character(),
 			log_d      = numeric(),
 			same_remo  = logical(),
 			same_gene  = logical()
 		)
+
 	} else {
+
 		idx_i <- idx_i[seq_len(k)]
 		idx_j <- idx_j[seq_len(k)]
 
-		peak_names <- paste(dt$peak_name[idx_i], dt$peak_name[idx_j], sep = "_")
+		peak_names <- paste(
+			dt$peak_name[idx_i],
+			dt$peak_name[idx_j],
+			sep = "_"
+		)
+
 		d_raw <- dt$start[idx_j] - dt$end[idx_i]
 		log_d <- log(d_raw)
 
@@ -242,7 +258,8 @@ get_pairedPeaks_dt <- function(dt, max_d = 100L, with_stats = TRUE) {
 	if (!with_stats) return(pair_dt)
 
 	worst_case_pairs <- as.double(n) * (n - 1) / 2
-	frac_of_worst <- if (worst_case_pairs > 0) comparison_count / worst_case_pairs else NA_real_
+	frac_of_worst <- if (worst_case_pairs > 0)
+		comparison_count / worst_case_pairs else NA_real_
 
 	stats_dt <- data.table(
 		metric    = c("n", "pair_count", "comparison_count_success", "worst_case_pairs", "fraction_of_worst"),
@@ -256,23 +273,33 @@ get_pairedPeaks_dt <- function(dt, max_d = 100L, with_stats = TRUE) {
 		)
 	)
 
-	if (isTRUE(verbose)) {
-		vprint_head(pair_dt, label = "Head(pair_dt):")
-		vprint_head(stats_dt, label = "stats_dt:")
-	}
+	cat("Pairwise comparison stats:\n")
+	print(stats_dt)
 
 	list(pairs = pair_dt, stats = stats_dt)
 }
 
-p_gt0_scinot_from_z <- function(z, digits = 3) {
-	log_p <- pnorm(z, lower.tail = FALSE, log.p = TRUE)
+p_from_z_scinot <- function(z, side = c("greater", "less", "two.sided"), digits = 3) {
+
+	side <- match.arg(side)
+
+	if (side == "greater") {
+		log_p <- pnorm(z, lower.tail = FALSE, log.p = TRUE)
+	} else if (side == "less") {
+		log_p <- pnorm(z, lower.tail = TRUE, log.p = TRUE)
+	} else {
+		log_p <- log(2) + pnorm(abs(z), lower.tail = FALSE, log.p = TRUE)
+	}
+
 	log10_p <- log_p / log(10)
 	exponent <- floor(log10_p)
 	mantissa <- 10^(log10_p - exponent)
+
 	sprintf(paste0("%.", digits, "fE%+d"), mantissa, exponent)
 }
 
-summarise_glm <- function(fit, model_name, outcome) {
+summarise_glm <- function(fit, model_name, outcome, p_digits = 3) {
+
 	sm <- tryCatch(
 		coef(summary(fit)),
 		error = function(e) NULL
@@ -284,8 +311,8 @@ summarise_glm <- function(fit, model_name, outcome) {
 			estimate = numeric(),
 			std_error = numeric(),
 			z_value = numeric(),
-			p_two_sided = numeric(),
-			p_one_sided_gt0 = numeric(),
+			p_two_sided = character(),
+			p_one_sided_gt0 = character(),
 			model_name = character(),
 			outcome = character()
 		))
@@ -293,28 +320,27 @@ summarise_glm <- function(fit, model_name, outcome) {
 
 	dt <- as.data.table(sm, keep.rownames = "term")
 
-	old_cols <- intersect(names(dt), c("Estimate", "Std. Error", "z value", "Pr(>|z|)"))
+	if ("Estimate" %in% names(dt)) setnames(dt, "Estimate", "estimate")
+	if ("Std. Error" %in% names(dt)) setnames(dt, "Std. Error", "std_error")
+	if ("z value" %in% names(dt)) setnames(dt, "z value", "z_value")
+	if (!"z_value" %in% names(dt)) dt[, z_value := NA_real_]
 
-	rename_map <- c(
-		"Estimate"   = "estimate",
-		"Std. Error" = "std_error",
-		"z value"    = "z_value",
-		"Pr(>|z|)"   = "p_two_sided"
-	)
+	if ("Pr(>|z|)" %in% names(dt)) {
+		dt[, `Pr(>|z|)` := NULL]
+	}
 
-	setnames(dt, old = old_cols, new = rename_map[old_cols])
+	dt[, p_one_sided_gt0 := NA_character_]
+	dt[is.finite(z_value), p_one_sided_gt0 := p_from_z_scinot(z_value, side = "greater", digits = p_digits)]
 
-	dt[, p_one_sided_gt0 := NA_real_]
-	dt[is.finite(z_value), p_one_sided_gt0 := p_gt0_scinot_from_z(z_value)]
+	dt[, p_two_sided := NA_character_]
+	dt[is.finite(z_value), p_two_sided := p_from_z_scinot(z_value, side = "two.sided", digits = p_digits)]
 
 	dt[, `:=`(model_name = model_name, outcome = outcome)]
-
 	setcolorder(dt, c(
 		"model_name", "outcome", "term",
 		"estimate", "std_error", "z_value",
 		"p_two_sided", "p_one_sided_gt0"
 	))
-
 	dt[]
 }
 
@@ -326,6 +352,10 @@ only_chrs <- parse_chr_list(args$only_chrs)
 
 sig_links <- fread(sig_pgl_fpath)
 
+if ("pvalue" %in% names(sig_links)) {
+	sig_links[, pvalue := formatC(as.numeric(pvalue), format = "e", digits = 3)]
+}
+
 rel_levels <- seqlevels(REMO.v1.GRCh38)
 if (length(only_chrs) > 0L) {
 	rel_levels <- intersect(rel_levels, only_chrs)
@@ -333,8 +363,8 @@ if (length(only_chrs) > 0L) {
 	rel_levels <- setdiff(rel_levels, skip_chrs)
 }
 
-vcat(sprintf("max_d: %d", max_d))
-vcat(sprintf("Chromosomes to run: %s", paste(rel_levels, collapse = ",")))
+cat(sprintf("max_d: %d\n", max_d))
+cat(sprintf("Chromosomes to run: %s\n\n", paste(rel_levels, collapse = ",")))
 
 # ----------
 # Subset to linked peaks
@@ -343,21 +373,22 @@ linked_peak_strs <- unique(sig_links$peak)
 gr_peaks_strs <- GRangesToString(REMO.v1.GRCh38)
 gr_sub <- REMO.v1.GRCh38[gr_peaks_strs %in% linked_peak_strs]
 
+cat(sprintf("Total linked peaks found in REMO.v1.GRCh38: %d\n\n", length(gr_sub)))
+
 # ----------
 # Per-chromosome processing
 # ----------
 for (chr in rel_levels) {
-	vcat(sprintf("Processing %s", chr))
+
+	cat(sprintf("Processing %s\n", chr))
 
 	gr_sub_chr <- gr_sub[seqnames(gr_sub) == chr]
 	if (length(gr_sub_chr) == 0L) {
-		message(sprintf("Skipping %s: no linked peaks", chr))
+		cat(sprintf("Skipping %s: no linked peaks\n\n", chr))
 		next
 	}
 
-	if (isTRUE(verbose)) {
-		message(sprintf("n_peaks (linked) in %s: %d", chr, length(gr_sub_chr)))
-	}
+	cat(sprintf("n_peaks (linked) in %s: %d\n", chr, length(gr_sub_chr)))
 
 	dt <- get_linkedPeaks_dt(gr_sub_chr, sig_links)
 	res <- get_pairedPeaks_dt(dt, max_d = max_d)
@@ -380,23 +411,36 @@ for (chr in rel_levels) {
 		.(same_remo = as.integer(same_remo), log_d = log_d, same_gene = as.integer(same_gene))
 	]
 
+	rm(res)
+	gc()
+
 	if (nrow(model_dt) == 0L) {
-		message(sprintf("Skipping %s: no finite log_d rows", chr))
+		cat(sprintf("Skipping %s: no finite log_d rows\n", chr))
+		rm(dt, model_dt, gr_sub_chr)
+		gc()
 		next
 	}
 
-	if (isTRUE(verbose)) {
-		message(sprintf("n_rows(model_dt) in %s: %d", chr, nrow(model_dt)))
-	}
+	cat(sprintf("n_rows(model_dt) in %s: %d\n", chr, nrow(model_dt)))
 
 	fit_A <- glm(same_remo ~ log_d + same_gene, data = model_dt, family = binomial)
 	fit_B <- glm(same_gene ~ log_d + same_remo, data = model_dt, family = binomial(link = "logit"))
 
-	glm_res_A <- summarise_glm(fit_A, "Model_A", "same_remo")
-	glm_res_B <- summarise_glm(fit_B, "Model_B", "same_gene")
+	glm_res_A <- summarise_glm(fit_A, "Model_A", "same_remo", p_digits = 3)
+	glm_res_B <- summarise_glm(fit_B, "Model_B", "same_gene", p_digits = 3)
 	glm_results <- rbind(glm_res_A, glm_res_B, fill = TRUE)
 
-	# ---- Write GLM summaries ----
+	if (!"p_two_sided" %in% names(glm_results)) {
+		stop(sprintf("Internal error: 'p_two_sided' missing from glm_results for %s", chr))
+	}
+
+	glm_results[, chr := chr]
+	setcolorder(glm_results, c(
+		"chr", "model_name", "outcome", "term",
+		"estimate", "std_error", "z_value",
+		"p_two_sided", "p_one_sided_gt0"
+	))
+
 	glmSummary_fpath <- file.path(glmResults_dir, paste0("glm_summary_", chr, ".txt"))
 	summary_A <- capture.output(summary(fit_A))
 	summary_B <- capture.output(summary(fit_B))
@@ -419,5 +463,10 @@ for (chr in rel_levels) {
 	glmResults_fpath <- file.path(glmResults_dir, paste0("glm_results_", chr, ".tsv"))
 	fwrite(glm_results, glmResults_fpath, sep = "\t", quote = FALSE)
 
-	message(sprintf("Done: %s", chr))
+	rm(
+		dt, model_dt, fit_A, fit_B,
+		glm_res_A, glm_res_B, glm_results,
+		summary_A, summary_B, gr_sub_chr
+	)
+	gc()
 }
